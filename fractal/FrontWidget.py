@@ -6,3 +6,4 @@ class FrontWidget(QtWidgets.QWidget):
         self.helloLabel = QtWidgets.QLabel("Hello world!")
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.addWidget(self.helloLabel)
+        self.setLayout(self.layout)

@@ -1,11 +1,11 @@
 import sys
-from PySide2 import QtCore, QtWidgets, QtGui
-from fractal.FrontWidget import FrontWidget
+from PySide2 import QtWidgets
+from fractal.MainWindow import MainWindow
 
 def main():
     app = QtWidgets.QApplication([])
-    widget = FrontWidget()
-    widget.show()
+    window = MainWindow()
+    window.show()
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
