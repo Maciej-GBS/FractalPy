@@ -30,7 +30,21 @@ class Polynomial:
         return self._poly.coeffs.__iter__()
 
     def __str__(self):
-        return " + ".join([f"{c}{self._poly.variable}^{self._poly.order - index}" for index, c in enumerate(self._poly.coeffs) if c != 0])
+        atom_list = []
+        for index, c in enumerate(self._poly.coeffs):
+            if c == 0:
+                continue
+
+            # Non-zero coefficients
+            atom = f"{c}"
+
+            # Meaningful powers
+            if index < self._poly.order:
+                atom += f"{self._poly.variable}"
+            if index + 1 < self._poly.order:
+                atom += f"^{self._poly.order - index}"
+            atom_list.append(atom)
+        return " + ".join(atom_list)
 
     def calc(self, x: complex):
         """Calculate polynomial's 'y' value at point 'x': P(x) = y

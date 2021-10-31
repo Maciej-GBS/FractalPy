@@ -9,7 +9,7 @@ class Julia:
         self.limits = np.array([4.0, 4.0])
 
     def __str__(self):
-        return "() / ()"
+        return f"({self.numerator}) / ({self.denominator})"
 
     def setNumerator(self, p: Polynomial):
         self.numerator = p
@@ -25,7 +25,7 @@ class Julia:
 
     def _calc(self, iterations: int, start: complex, c: complex):
         n = start
-        for i in range(0,iterations):
+        for i in range(0, iterations):
             n = self.numerator(n) / self.denominator(n) + c
             R = np.array((n.real, n.imag))
             R = R @ R
