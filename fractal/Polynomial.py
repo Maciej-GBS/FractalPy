@@ -27,11 +27,10 @@ class Polynomial:
         self._poly.coeffs[key] = value
 
     def __iter__(self):
-        pass
+        return self._poly.coeffs.__iter__()
 
     def __str__(self):
         return " + ".join([f"{c}{self._poly.variable}^{self._poly.order - index}" for index, c in enumerate(self._poly.coeffs) if c != 0])
-        # return self._poly.__str__()
 
     def calc(self, x: complex):
         """Calculate polynomial's 'y' value at point 'x': P(x) = y

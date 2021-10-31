@@ -1,6 +1,7 @@
 import numpy as np
 from fractal.Polynomial import Polynomial
 
+
 class Julia:
     def __init__(self):
         self.numerator = None
