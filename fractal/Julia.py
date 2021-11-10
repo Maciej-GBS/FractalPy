@@ -18,6 +18,7 @@ class Julia:
         self.denominator = p
 
     def _getColor(self, progress: float):
+        # TODO apply colormap
         if (progress >= 1):
             return 0.0
         else:

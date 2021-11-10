@@ -1,6 +1,5 @@
 from PySide2 import QtCore, QtGui, QtWidgets
 from fractal.CustomGraphics import CustomGraphics
-from fractal.CustomSpinner import CustomSpinner
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -121,7 +120,7 @@ class MainWindowLayout(object):
 
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.colorSpin = CustomSpinner(self.centralwidget)
+        self.colorSpin = QtWidgets.QSpinBox(self.centralwidget)
         self.colorSpin.setMaximum(16777215)
         self.colorSpin.setSingleStep(1)
         self.colorSpin.setValue(16777215)
