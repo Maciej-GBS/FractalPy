@@ -20,7 +20,12 @@ class MainWindow(QtWidgets.QMainWindow):
         lo.colorButton.clicked.connect(self.editColormap)
         lo.resetButton.clicked.connect(self.reset)
         lo.zoomSpin.valueChanged[float].connect(self.zoomChanged)
+        lo.graphicsView.changeZoom.connect(self.changeZoom)
+        lo.graphicsView.changeOffset.connect(self.setOffset)
         self.j.progress.connect(self.updateProgress)
+
+    def status(self, text: str):
+        self.layout_object.statusbar.showMessage(text)
 
     def updateImage(self):
         self.updateJulia()
@@ -38,27 +43,37 @@ class MainWindow(QtWidgets.QMainWindow):
         self.j.setDenominator(Polynomial(g))
         self.j.setC(complex(r * np.cos(fi), r * np.sin(fi)))
 
+    def setOffset(self, x: float, y: float):
+        self.j.setOffset(x, y)
+        self.status(f"new offset {x} {y}")
+
+    def setZoom(self, z: float):
+        self.layout_object.zoomSpin.setValue(z)
+        self.status(f"new zoom {z}")
+
+    def changeZoom(self, dz: float):
+        self.setZoom(self.layout_object.zoomSpin.value() + dz)
+
     def updateProgress(self, p: float):
         self.layout_object.progressBar.setValue(int(p * 100))
 
     def editColormap(self):
-        # TODO open ColormapWidget
+        # TODO show ColormapWidget
         raise NotImplementedError
 
     def reset(self):
-        # TODO reset zoom and translations
-        raise NotImplementedError
+        self.setZoom(1.0)
+        self.setOffset(0.0, 0.0)
 
     def zoomChanged(self, d: float):
-        # TODO apply new zoom
-        raise NotImplementedError
+        self.j.setScale(d)
 
     def exportImageAs(self):
         # TODO open save as dialog and export image
         raise NotImplementedError
 
 class MainWindowLayout(object):
-    def __init__(self, owner:MainWindow):
+    def __init__(self, owner: MainWindow):
         super().__init__()
         self.owner = owner
 

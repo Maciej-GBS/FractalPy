@@ -1,13 +1,18 @@
 from PySide2.QtGui import QImage, QPixmap
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, Signal
 from PySide2.QtWidgets import QGraphicsView, QAbstractScrollArea, QGraphicsScene
 
 
 class CustomGraphics(QGraphicsView):
+    changeZoom = Signal(float)
+    changeOffset = Signal(float, float)
+
     def __init__(self, scene, parent=None):
         super().__init__(scene, parent)
+        self.setCursor(Qt.CrossCursor)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.mousePos = None
         self.image = None
 
     def getImage(self):
@@ -36,8 +41,19 @@ class CustomGraphics(QGraphicsView):
         self.setCursor(Qt.ClosedHandCursor)
         self.mousePos = (event.x(), event.y())
 
+    def mouseMoveEvent(self, event):
+        super().mouseMoveEvent(event)
+        # TODO translate contents with the mouse
+
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
         self.setCursor(Qt.OpenHandCursor)
         dPos = [x - x0 for x0,x in zip(self.mousePos, [event.x(), event.y()])]
-        # TODO reposition graphic
+        self.mousePos = None
+        self.resetTransform()
+        self.changeOffset.emit(dPos[0], dPos[1])
+
+    def wheelEvent(self, event):
+        super().wheelEvent(event)
+        degrees = event.angleDelta().y() / 8.0
+        self.changeZoom.emit(degrees / 180.0)

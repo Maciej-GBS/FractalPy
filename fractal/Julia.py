@@ -31,6 +31,12 @@ class Julia(QObject):
     def setC(self, c: complex):
         self.C = c
 
+    def setScale(self, s: float):
+        self.scale = s
+
+    def setOffset(self, x: float, y: float):
+        self.offset = np.array([x, y])
+
     def _getColor(self, progress: float):
         if (progress >= 1):
             return self.colormap(0.0)
