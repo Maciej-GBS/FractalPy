@@ -1,11 +1,30 @@
 from PySide2 import QtCore, QtGui, QtWidgets
 from fractal.CustomGraphics import CustomGraphics
+from fractal.Julia import Julia
+from fractal.Polynomial import Polynomial
+
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.layout_object = MainWindowLayout(self)
         self.layout_object.setupUi()
+        self.updateImage()
+
+    def updateImage(self):
+        self.updateJulia()
+        gv = self.layout_object.graphicsView
+        img = QtGui.QImage(gv.width(), gv.height(), QtGui.QImage.Format_RGB32)
+        img = self.j.paint(img)
+        scene = QtWidgets.QGraphicsScene()
+        scene.addPixmap(QtGui.QPixmap.fromImage(img))
+        gv.setScene(scene)
+
+    def updateJulia(self):
+        self.j = Julia()
+        self.j.setNumerator(Polynomial([2, 1]))
+        self.j.setDenominator(Polynomial([1]))
+        self.j.setC(complex(3,2))
 
 class MainWindowLayout(object):
     def __init__(self, owner:MainWindow):
