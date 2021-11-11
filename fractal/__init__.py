@@ -5,6 +5,7 @@ from fractal.MainWindow import MainWindow
 
 def main():
     app = QtWidgets.QApplication([])
+    app.setApplicationName("Fractal Gen")
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())

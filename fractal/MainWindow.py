@@ -1,3 +1,4 @@
+import numpy as np
 from PySide2 import QtCore, QtGui, QtWidgets
 from fractal.CustomGraphics import CustomGraphics
 from fractal.Julia import Julia
@@ -7,12 +8,14 @@ from fractal.Polynomial import Polynomial
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
+        self.j = Julia()
         self.layout_object = MainWindowLayout(self)
         self.layout_object.setupUi()
         self.setupSignals()
 
     def setupSignals(self):
         self.layout_object.genButton.clicked.connect(lambda: self.updateImage())
+        self.j.progress.connect(self.updateProgress)
 
     def updateImage(self):
         self.updateJulia()
@@ -21,10 +24,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.layout_object.graphicsView.setImage(img)
 
     def updateJulia(self):
-        self.j = Julia()
-        self.j.setNumerator(Polynomial([2, 1]))
-        self.j.setDenominator(Polynomial([1]))
-        self.j.setC(complex(0,1))
+        f = self.layout_object.fText.toPlainText()
+        g = self.layout_object.gText.toPlainText()
+        r = float(self.layout_object.rSpin.value())
+        fi = 2 * np.pi * self.layout_object.fiSlider.value() / self.layout_object.fiSlider.maximum()
+        self.j.setNumerator(Polynomial(f))
+        self.j.setDenominator(Polynomial(g))
+        self.j.setC(complex(r * np.cos(fi), r * np.sin(fi)))
+
+    def updateProgress(self, p: float):
+        self.layout_object.progressBar.setValue(int(p * 100))
+
+    def exportImageAs(self):
+        # TODO open save as dialog and export image
+        raise NotImplementedError
 
 class MainWindowLayout(object):
     def __init__(self, owner:MainWindow):
@@ -58,6 +71,7 @@ class MainWindowLayout(object):
         self.owner.setStatusBar(self.statusbar)
 
     def addMenuBar(self):
+        # TODO add menu?
         self.menubar = QtWidgets.QMenuBar(self.owner)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 944, 25))
         self.menubar.setObjectName("menubar")
@@ -117,6 +131,7 @@ class MainWindowLayout(object):
         self.gridLayout.addWidget(self.label_4, 8, 0, 1, 1)
 
         self.fiSlider = QtWidgets.QSlider(self.centralwidget)
+        self.fiSlider.setMinimum(0)
         self.fiSlider.setMaximum(1000)
         self.fiSlider.setOrientation(QtCore.Qt.Horizontal)
         self.fiSlider.setObjectName("fiSlider")
