@@ -1,11 +1,15 @@
 import numpy as np
 from PySide2.QtGui import QImage
+from PySide2.QtCore import QObject, Signal, Slot
 from fractal.Polynomial import Polynomial
 from fractal.Colormap import Colormap
 
 
-class Julia:
+class Julia(QObject):
+    progress = Signal(float)
+
     def __init__(self):
+        super().__init__()
         self.numerator = None
         self.denominator = None
         self.C = None
@@ -44,10 +48,13 @@ class Julia:
 
     def paint(self, img: QImage):
         # TODO iterative quality increase
-        w = img.width() - 1
-        h = img.height() - 1
+        w = img.width()
+        h = img.height()
+        self.progress.emit(0.0)
         for y in range(0,h):
             for x in range(0,w):
                 z = self.limits * np.array([x/w, y/h])
                 img.setPixel(x, y, self._calc(complex(*z), self.C))
+            self.progress.emit(y / h)
+        self.progress.emit(1.0)
         return img
