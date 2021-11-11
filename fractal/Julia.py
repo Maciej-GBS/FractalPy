@@ -47,7 +47,7 @@ class Julia(QObject):
         return self._getColor(1.0)
 
     def paint(self, img: QImage):
-        # TODO iterative quality increase
+        # TODO progressive image generating
         w = img.width()
         h = img.height()
         self.progress.emit(0.0)

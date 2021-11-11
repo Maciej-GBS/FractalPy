@@ -108,12 +108,12 @@ class MainWindowLayout(object):
 
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
         self.label_2.setObjectName("label_2")
-        self.label_2.setText("Target quality:")
+        self.label_2.setText("Grading:")
         self.gridLayout.addWidget(self.label_2, 2, 0, 1, 1)
 
         self.iterSpin = QtWidgets.QSpinBox(self.centralwidget)
         self.iterSpin.setMinimum(10)
-        self.iterSpin.setMaximum(1000000)
+        self.iterSpin.setMaximum(100000000)
         self.iterSpin.setSingleStep(10)
         self.iterSpin.setValue(100)
         self.iterSpin.setObjectName("iterSpin")
