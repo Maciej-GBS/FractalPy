@@ -18,16 +18,12 @@ class CustomGraphics(QGraphicsView):
             QtGui.QImage(view.width, view.height, RGB32)
         """
         w,h = self.size().toTuple()
-        if self.image is None:
-            self.image = QImage(w, h, QImage.Format_RGB32)
+        iw,ih = (-1,-1) if self.image is None else self.image.size().toTuple()
+        if iw == w and ih == h:
             return self.image
         else:
-            iw,ih = self.image.size().toTuple()
-            if iw == w and ih == h:
-                return self.image
-            else:
-                self.image = QImage(w, h, QImage.Format_RGB32)
-                return self.image
+            self.image = QImage(w, h, QImage.Format_RGB32)
+            return self.image
 
     def setImage(self, img: QImage):
         self.image = img
