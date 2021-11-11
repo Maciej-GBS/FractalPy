@@ -13,7 +13,9 @@ class Julia(QObject):
         self.numerator = None
         self.denominator = None
         self.C = None
-        self.limits = np.array([4.0, 4.0])
+        self.scale = 1.0
+        self.offset = np.array([0.0, 0.0])
+        self.ranges = np.array([4.0, 4.0])
         self.max_iterations = 100
         self.colormap = Colormap()
 
@@ -41,7 +43,7 @@ class Julia(QObject):
             n = self.numerator(n) / self.denominator(n) + c
             R = np.array((n.real, n.imag))
             R = R @ R
-            lim = np.sqrt(self.limits @ self.limits)
+            lim = np.sqrt(self.ranges @ self.ranges)
             if (R >= lim):
                 return self._getColor(i / self.max_iterations)
         return self._getColor(1.0)
@@ -53,8 +55,9 @@ class Julia(QObject):
         self.progress.emit(0.0)
         for y in range(0,h):
             for x in range(0,w):
-                # TODO translation and zoom
-                z = self.limits * np.array([x/w, y/h])
+                scaled_range = self.ranges / self.scale
+                offset_pos = np.array([x, y]) + self.offset
+                z = ((offset_pos / np.array([w, h])) - 0.5) * scaled_range
                 img.setPixel(x, y, self._calc(complex(*z), self.C))
             self.progress.emit(y / h)
         self.progress.emit(1.0)
