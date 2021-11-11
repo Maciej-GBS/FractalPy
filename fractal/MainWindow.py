@@ -9,12 +9,16 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).__init__()
         self.layout_object = MainWindowLayout(self)
         self.layout_object.setupUi()
-        self.updateImage()
+        self.setupSignals()
+
+    def setupSignals(self):
+        self.layout_object.genButton.clicked.connect(lambda: self.updateImage())
 
     def updateImage(self):
         self.updateJulia()
         gv = self.layout_object.graphicsView
-        img = QtGui.QImage(gv.width(), gv.height(), QtGui.QImage.Format_RGB32)
+        w,h = gv.size().toTuple()
+        img = QtGui.QImage(w, h, QtGui.QImage.Format_RGB32)
         img = self.j.paint(img)
         scene = QtWidgets.QGraphicsScene()
         scene.addPixmap(QtGui.QPixmap.fromImage(img))
@@ -24,7 +28,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.j = Julia()
         self.j.setNumerator(Polynomial([2, 1]))
         self.j.setDenominator(Polynomial([1]))
-        self.j.setC(complex(3,2))
+        self.j.setC(complex(0,1))
 
 class MainWindowLayout(object):
     def __init__(self, owner:MainWindow):
@@ -59,20 +63,20 @@ class MainWindowLayout(object):
         self.zoomSpin = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.zoomSpin.setDecimals(4)
         self.zoomSpin.setMinimum(0.0001)
-        self.zoomSpin.setMaximum(100000.0)
+        self.zoomSpin.setMaximum(10000000000.0)
         self.zoomSpin.setSingleStep(0.1)
         self.zoomSpin.setValue(1.0)
         self.zoomSpin.setObjectName("zoomSpin")
         self.gridLayout.addWidget(self.zoomSpin, 7, 0, 1, 1)
 
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setObjectName("label")
-        self.label.setText("Colormap:")
-        self.gridLayout.addWidget(self.label, 4, 0, 1, 1)
+        self.colorButton = QtWidgets.QPushButton(self.centralwidget)
+        self.colorButton.setObjectName("colorButton")
+        self.colorButton.setText("Colormap...")
+        self.gridLayout.addWidget(self.colorButton, 4, 0, 1, 1)
 
         self.savButton = QtWidgets.QPushButton(self.centralwidget)
         self.savButton.setObjectName("savButton")
-        self.savButton.setText("Save")
+        self.savButton.setText("Export as")
         self.gridLayout.addWidget(self.savButton, 0, 0, 1, 1)
 
         self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
@@ -121,7 +125,7 @@ class MainWindowLayout(object):
 
         self.rSpin = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.rSpin.setDecimals(4)
-        self.rSpin.setMaximum(100.0)
+        self.rSpin.setMaximum(10000.0)
         self.rSpin.setSingleStep(0.1)
         self.rSpin.setObjectName("rSpin")
         self.gridLayout.addWidget(self.rSpin, 12, 0, 1, 1)
@@ -134,29 +138,12 @@ class MainWindowLayout(object):
         self.fText = QtWidgets.QPlainTextEdit(self.centralwidget)
         self.fText.setMinimumSize(QtCore.QSize(0, 0))
         self.fText.setObjectName("fText")
-        self.fText.setPlainText("1z^2")
+        self.fText.setPlainText("1x^2")
         self.gridLayout.addWidget(self.fText, 13, 0, 1, 1)
-
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.colorSpin = QtWidgets.QSpinBox(self.centralwidget)
-        self.colorSpin.setMaximum(16777215)
-        self.colorSpin.setSingleStep(1)
-        self.colorSpin.setValue(16777215)
-        self.colorSpin.setObjectName("colorSpin")
-        self.colorSpin.setPrefix("0x")
-        self.horizontalLayout.addWidget(self.colorSpin)
-        self.shiftSpin = QtWidgets.QSpinBox(self.centralwidget)
-        self.shiftSpin.setMinimum(1)
-        self.shiftSpin.setMaximum(6)
-        self.shiftSpin.setValue(1)
-        self.shiftSpin.setObjectName("shiftSpin")
-        self.horizontalLayout.addWidget(self.shiftSpin)
-        self.gridLayout.addLayout(self.horizontalLayout, 5, 0, 1, 1)
 
         self.resetButton = QtWidgets.QPushButton(self.centralwidget)
         self.resetButton.setObjectName("resetButton")
-        self.resetButton.setText("Reset position")
+        self.resetButton.setText("Reset")
         self.gridLayout.addWidget(self.resetButton, 8, 0, 1, 1)
 
         self.gridLayout.setColumnStretch(0, 1)
@@ -176,9 +163,7 @@ class MainWindowLayout(object):
 
         self.owner.setTabOrder(self.savButton, self.genButton)
         self.owner.setTabOrder(self.genButton, self.iterSpin)
-        self.owner.setTabOrder(self.iterSpin, self.colorSpin)
-        self.owner.setTabOrder(self.colorSpin, self.shiftSpin)
-        self.owner.setTabOrder(self.shiftSpin, self.zoomSpin)
+        self.owner.setTabOrder(self.iterSpin, self.zoomSpin)
         self.owner.setTabOrder(self.zoomSpin, self.fiSlider)
         self.owner.setTabOrder(self.fiSlider, self.rSpin)
         self.owner.setTabOrder(self.rSpin, self.fText)

@@ -1,10 +1,12 @@
 from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QGraphicsView
+from PySide2.QtWidgets import QGraphicsView, QAbstractScrollArea
 
 
 class CustomGraphics(QGraphicsView):
     def __init__(self, scene, parent=None):
         super().__init__(scene, parent)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
