@@ -14,7 +14,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setupSignals()
 
     def setupSignals(self):
-        self.layout_object.genButton.clicked.connect(lambda: self.updateImage())
+        lo = self.layout_object
+        lo.savButton.clicked.connect(self.exportImageAs)
+        lo.genButton.clicked.connect(self.updateImage)
+        lo.colorButton.clicked.connect(self.editColormap)
+        lo.resetButton.clicked.connect(self.reset)
+        lo.zoomSpin.valueChanged[float].connect(self.zoomChanged)
         self.j.progress.connect(self.updateProgress)
 
     def updateImage(self):
@@ -28,12 +33,25 @@ class MainWindow(QtWidgets.QMainWindow):
         g = self.layout_object.gText.toPlainText()
         r = float(self.layout_object.rSpin.value())
         fi = 2 * np.pi * self.layout_object.fiSlider.value() / self.layout_object.fiSlider.maximum()
+        self.j.max_iterations = self.layout_object.iterSpin.value()
         self.j.setNumerator(Polynomial(f))
         self.j.setDenominator(Polynomial(g))
         self.j.setC(complex(r * np.cos(fi), r * np.sin(fi)))
 
     def updateProgress(self, p: float):
         self.layout_object.progressBar.setValue(int(p * 100))
+
+    def editColormap(self):
+        # TODO open ColormapWidget
+        raise NotImplementedError
+
+    def reset(self):
+        # TODO reset zoom and translations
+        raise NotImplementedError
+
+    def zoomChanged(self, d: float):
+        # TODO apply new zoom
+        raise NotImplementedError
 
     def exportImageAs(self):
         # TODO open save as dialog and export image
@@ -90,11 +108,11 @@ class MainWindowLayout(object):
 
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
         self.label_2.setObjectName("label_2")
-        self.label_2.setText("Iterations:")
+        self.label_2.setText("Target quality:")
         self.gridLayout.addWidget(self.label_2, 2, 0, 1, 1)
 
         self.iterSpin = QtWidgets.QSpinBox(self.centralwidget)
-        self.iterSpin.setMinimum(1)
+        self.iterSpin.setMinimum(10)
         self.iterSpin.setMaximum(1000000)
         self.iterSpin.setSingleStep(10)
         self.iterSpin.setValue(100)
