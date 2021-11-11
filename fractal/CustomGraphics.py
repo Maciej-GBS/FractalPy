@@ -1,5 +1,6 @@
+from PySide2.QtGui import QImage, QPixmap
 from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QGraphicsView, QAbstractScrollArea
+from PySide2.QtWidgets import QGraphicsView, QAbstractScrollArea, QGraphicsScene
 
 
 class CustomGraphics(QGraphicsView):
@@ -7,6 +8,15 @@ class CustomGraphics(QGraphicsView):
         super().__init__(scene, parent)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+    def getImage(self):
+        w,h = self.size().toTuple()
+        return QImage(w, h, QImage.Format_RGB32)
+
+    def setImage(self, img: QImage):
+        scene = QGraphicsScene()
+        scene.addPixmap(QPixmap.fromImage(img))
+        self.setScene(scene)
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)

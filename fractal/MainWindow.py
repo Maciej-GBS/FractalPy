@@ -16,13 +16,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def updateImage(self):
         self.updateJulia()
-        gv = self.layout_object.graphicsView
-        w,h = gv.size().toTuple()
-        img = QtGui.QImage(w, h, QtGui.QImage.Format_RGB32)
+        img = self.layout_object.graphicsView.getImage()
         img = self.j.paint(img)
-        scene = QtWidgets.QGraphicsScene()
-        scene.addPixmap(QtGui.QPixmap.fromImage(img))
-        gv.setScene(scene)
+        self.layout_object.graphicsView.setImage(img)
 
     def updateJulia(self):
         self.j = Julia()
