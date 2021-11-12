@@ -15,6 +15,11 @@ class CustomGraphics(QGraphicsView):
         self.mousePos = None
         self.image = None
         self.pix = None
+        self.originalT = None
+
+    def scrollContentsBy(self, dx, dy):
+        # disable scrolling
+        pass
 
     def getImage(self):
         """Gets the current image.
@@ -35,6 +40,7 @@ class CustomGraphics(QGraphicsView):
         self.image = img
         scene = QGraphicsScene()
         self.pix = scene.addPixmap(QPixmap.fromImage(img))
+        self.originalT = self.pix.transform()
         self.setScene(scene)
 
     def getMousePos(self, event):
@@ -68,4 +74,9 @@ class CustomGraphics(QGraphicsView):
     def wheelEvent(self, event):
         super().wheelEvent(event)
         degrees = event.angleDelta().y() / 8.0
-        self.changeZoom.emit(degrees / 180.0)
+        dzoom = degrees / 180.0
+        self.changeZoom.emit(dzoom)
+        t0 = self.pix.transform()
+        t = QTransform()
+        t.scale(t0.m11() + dzoom, t0.m22() + dzoom)
+        self.pix.setTransform(t0 * t)

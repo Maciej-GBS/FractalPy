@@ -44,13 +44,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.j.setC(complex(r * np.cos(fi), r * np.sin(fi)))
 
     def setOffset(self, x: float, y: float):
-        off = np.array([x, y]) + self.j.offset
+        off = self.j.offset - np.array([x, y])
         self.j.setOffset(*off)
         #self.updateImage()
 
     def setZoom(self, z: float):
         self.layout_object.zoomSpin.setValue(z)
-        #self.updateImage()
 
     def changeZoom(self, dz: float):
         self.setZoom(self.layout_object.zoomSpin.value() + dz)
@@ -68,6 +67,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def zoomChanged(self, d: float):
         self.j.setScale(d)
+        #self.updateImage()
 
     def exportImageAs(self):
         # TODO open save as dialog and export image
