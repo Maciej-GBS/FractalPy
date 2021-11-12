@@ -21,7 +21,7 @@ class MainWindow(QtWidgets.QMainWindow):
         lo.resetButton.clicked.connect(self.reset)
         lo.zoomSpin.valueChanged[float].connect(self.zoomChanged)
         lo.graphicsView.changeZoom.connect(self.changeZoom)
-        lo.graphicsView.changeOffset.connect(self.setOffset)
+        lo.graphicsView.changeOffset.connect(self.changeOffset)
         self.j.progress.connect(self.updateProgress)
 
     def status(self, text: str):
@@ -43,7 +43,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.j.setDenominator(Polynomial(g))
         self.j.setC(complex(r * np.cos(fi), r * np.sin(fi)))
 
-    def setOffset(self, x: float, y: float):
+    def changeOffset(self, x: float, y: float):
         off = self.j.offset - np.array([x, y])
         self.j.setOffset(*off)
         #self.updateImage()
@@ -63,7 +63,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def reset(self):
         self.setZoom(1.0)
-        self.setOffset(0.0, 0.0)
+        self.j.setOffset(0.0, 0.0)
+        self.layout_object.graphicsView.resetPreview()
 
     def zoomChanged(self, d: float):
         self.j.setScale(d)

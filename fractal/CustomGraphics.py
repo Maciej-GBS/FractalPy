@@ -43,6 +43,10 @@ class CustomGraphics(QGraphicsView):
         self.originalT = self.pix.transform()
         self.setScene(scene)
 
+    def resetPreview(self):
+        if self.pix:
+            self.pix.resetTransform()
+
     def getMousePos(self, event):
         return event.pos().toTuple()
 
@@ -76,7 +80,12 @@ class CustomGraphics(QGraphicsView):
         degrees = event.angleDelta().y() / 8.0
         dzoom = degrees / 180.0
         self.changeZoom.emit(dzoom)
-        t0 = self.pix.transform()
-        t = QTransform()
-        t.scale(t0.m11() + dzoom, t0.m22() + dzoom)
-        self.pix.setTransform(t0 * t)
+        if self.pix:
+            center = self.pix.boundingRect().center()
+            t = self.pix.transform()
+            c1 = t.map(center)
+            t *= QTransform.fromScale(1.0 + dzoom, 1.0 + dzoom)
+            c2 = t.map(center)
+            dcenter = (c1 - c2).toTuple()
+            t.translate(*dcenter)
+            self.pix.setTransform(t)
