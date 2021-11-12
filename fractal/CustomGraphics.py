@@ -38,7 +38,7 @@ class CustomGraphics(QGraphicsView):
         self.setScene(scene)
 
     def getMousePos(self, event):
-        return (event.globalX(), event.globalY())
+        return event.pos().toTuple()
 
     def getMouseDPos(self, event):
         return [x - x0 for x0,x in zip(self.mousePos, self.getMousePos(event))]
@@ -47,21 +47,22 @@ class CustomGraphics(QGraphicsView):
         super().mousePressEvent(event)
         self.setCursor(Qt.ClosedHandCursor)
         self.mousePos = self.getMousePos(event)
+        if self.pix:
+            self.originalT = self.pix.transform()
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
         if self.mousePos is not None and self.pix is not None:
             dPos = self.getMouseDPos(event)
-            t = self.pix.transform()
-            t.translate(*dPos)
-            self.pix.setTransform(t)
+            t = QTransform()
+            t.translate(dPos[0], dPos[1])
+            self.pix.setTransform(self.originalT * t)
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
         self.setCursor(Qt.OpenHandCursor)
         dPos = self.getMouseDPos(event)
         self.mousePos = None
-        self.pix.resetTransform()
         self.changeOffset.emit(*dPos)
 
     def wheelEvent(self, event):
