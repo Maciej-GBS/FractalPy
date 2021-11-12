@@ -1,4 +1,4 @@
-from PySide2.QtGui import QImage, QPixmap
+from PySide2.QtGui import QImage, QPixmap, QTransform
 from PySide2.QtCore import Qt, Signal
 from PySide2.QtWidgets import QGraphicsView, QAbstractScrollArea, QGraphicsScene
 
@@ -14,6 +14,7 @@ class CustomGraphics(QGraphicsView):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.mousePos = None
         self.image = None
+        self.pix = None
 
     def getImage(self):
         """Gets the current image.
@@ -33,25 +34,35 @@ class CustomGraphics(QGraphicsView):
     def setImage(self, img: QImage):
         self.image = img
         scene = QGraphicsScene()
-        scene.addPixmap(QPixmap.fromImage(img))
+        self.pix = scene.addPixmap(QPixmap.fromImage(img))
         self.setScene(scene)
+
+    def getMousePos(self, event):
+        return (event.globalX(), event.globalY())
+
+    def getMouseDPos(self, event):
+        return [x - x0 for x0,x in zip(self.mousePos, self.getMousePos(event))]
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
         self.setCursor(Qt.ClosedHandCursor)
-        self.mousePos = (event.x(), event.y())
+        self.mousePos = self.getMousePos(event)
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
-        # TODO translate contents with the mouse
+        if self.mousePos is not None and self.pix is not None:
+            dPos = self.getMouseDPos(event)
+            t = self.pix.transform()
+            t.translate(*dPos)
+            self.pix.setTransform(t)
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
         self.setCursor(Qt.OpenHandCursor)
-        dPos = [x - x0 for x0,x in zip(self.mousePos, [event.x(), event.y()])]
+        dPos = self.getMouseDPos(event)
         self.mousePos = None
-        self.resetTransform()
-        self.changeOffset.emit(dPos[0], dPos[1])
+        self.pix.resetTransform()
+        self.changeOffset.emit(*dPos)
 
     def wheelEvent(self, event):
         super().wheelEvent(event)

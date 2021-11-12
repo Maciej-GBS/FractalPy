@@ -44,12 +44,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.j.setC(complex(r * np.cos(fi), r * np.sin(fi)))
 
     def setOffset(self, x: float, y: float):
-        self.j.setOffset(x, y)
-        self.status(f"new offset {x} {y}")
+        off = np.array([x, y]) + self.j.offset
+        self.j.setOffset(*off)
+        #self.updateImage()
 
     def setZoom(self, z: float):
         self.layout_object.zoomSpin.setValue(z)
-        self.status(f"new zoom {z}")
+        #self.updateImage()
 
     def changeZoom(self, dz: float):
         self.setZoom(self.layout_object.zoomSpin.value() + dz)
@@ -179,6 +180,7 @@ class MainWindowLayout(object):
         self.rSpin.setDecimals(4)
         self.rSpin.setMaximum(10000.0)
         self.rSpin.setSingleStep(0.1)
+        self.rSpin.setValue(1.0)
         self.rSpin.setObjectName("rSpin")
         self.gridLayout.addWidget(self.rSpin, 11, 0, 1, 1)
 
