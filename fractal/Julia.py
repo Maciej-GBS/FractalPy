@@ -1,6 +1,6 @@
 import numpy as np
 from PySide2.QtGui import QImage
-from PySide2.QtCore import QObject, Signal, Slot
+from PySide2.QtCore import QObject, Signal
 from fractal.Polynomial import Polynomial
 from fractal.Colormap import Colormap
 
