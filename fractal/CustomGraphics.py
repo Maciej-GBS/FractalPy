@@ -40,6 +40,7 @@ class CustomGraphics(QGraphicsView):
         self.image = img
         scene = QGraphicsScene()
         self.pix = scene.addPixmap(QPixmap.fromImage(img))
+        self.pix.setTransformationMode(Qt.FastTransformation)
         self.originalT = self.pix.transform()
         self.setScene(scene)
 
@@ -72,19 +73,19 @@ class CustomGraphics(QGraphicsView):
         super().mouseReleaseEvent(event)
         self.setCursor(Qt.OpenHandCursor)
         dPos = self.getMouseDPos(event)
-        self.mousePos = None
         self.changeOffset.emit(*dPos)
+        self.mousePos = None
 
     def wheelEvent(self, event):
         super().wheelEvent(event)
         degrees = event.angleDelta().y() / 8.0
-        dzoom = degrees / 180.0
+        dzoom = 1.0 + degrees / 180.0
         self.changeZoom.emit(dzoom)
         if self.pix:
             center = self.pix.boundingRect().center()
             t = self.pix.transform()
             c1 = t.map(center)
-            t *= QTransform.fromScale(1.0 + dzoom, 1.0 + dzoom)
+            t *= QTransform.fromScale(dzoom, dzoom)
             c2 = t.map(center)
             dcenter = (c1 - c2).toTuple()
             t.translate(*dcenter)

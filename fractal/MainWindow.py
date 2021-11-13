@@ -52,7 +52,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.layout_object.zoomSpin.setValue(z)
 
     def changeZoom(self, dz: float):
-        self.setZoom(self.layout_object.zoomSpin.value() + dz)
+        self.setZoom(self.layout_object.zoomSpin.value() * dz)
 
     def updateProgress(self, p: float):
         self.layout_object.progressBar.setValue(int(p * 100))
@@ -106,7 +106,7 @@ class MainWindowLayout(object):
         self.owner.setStatusBar(self.statusbar)
 
     def addMenuBar(self):
-        # TODO add menu?
+        # NOTE this is unused code but left for potential improvement
         self.menubar = QtWidgets.QMenuBar(self.owner)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 944, 25))
         self.menubar.setObjectName("menubar")
