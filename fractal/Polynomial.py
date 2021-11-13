@@ -41,6 +41,11 @@ class Polynomial:
                     add_atom(complex(x), 0)
         self._poly = np.poly1d(poly, variable='x')
 
+    def __eq__(self, other):
+        if isinstance(other, Polynomial):
+            return self._poly == other._poly
+        return self._poly == other
+
     def __call__(self, x: complex):
         return self.calc(x)
 
