@@ -22,7 +22,8 @@ class CustomGraphics(QGraphicsView):
 
     def setImage(self, img: QImage):
         scene = QGraphicsScene()
-        self.pix = scene.addPixmap(QPixmap.fromImage(img))
+        pixmap = QPixmap.fromImageInPlace(img)
+        self.pix = scene.addPixmap(pixmap.scaledToWidth(self.size().width()))
         self.pix.setTransformationMode(Qt.FastTransformation)
         self.originalT = self.pix.transform()
         self.setScene(scene)

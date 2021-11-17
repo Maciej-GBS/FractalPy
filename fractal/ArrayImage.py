@@ -10,7 +10,7 @@ class ArrayImage(QObject):
     def __init__(self):
         super().__init__()
         self.colormap = Colormap()
-        self.data = np.zeros((0, 0))
+        self.data = np.array([])
 
     def setData(self, d: np.array):
         self.data = d
@@ -24,6 +24,7 @@ class ArrayImage(QObject):
         w, h = self.data.shape
         image = QImage(w, h, QImage.Format_RGB32)
         # TODO improve - remove loops
+        # see qtforpython-5 reading and writing image files
         for x in range(0, w):
             for y in range(0, h):
                 color = self.colormap(self.data[x][y])
