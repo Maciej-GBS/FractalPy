@@ -63,7 +63,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def changeOffset(self, x: float, y: float):
         off = self.j.offset - np.array([x, y])
         self.j.setOffset(*off)
-        # self.updateImage()
+        # TODO schedule JWorker
 
     def changeZoom(self, dz: float):
         self.setZoom(self.layout_object.zoomSpin.value() * dz)
@@ -86,7 +86,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def zoomChanged(self, d: float):
         self.j.setScale(d)
-        # self.updateImage()
+        # TODO schedule JWorker
 
     def exportImageAs(
         self,
@@ -162,7 +162,6 @@ class MainWindow(QtWidgets.QMainWindow):
         dlg.setStandardButtons(buttons)
         dlg.setIcon(QMessageBox.Warning)
         return dlg.exec()
-
 
 
 class MainWindowLayout(object):
