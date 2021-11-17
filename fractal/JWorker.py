@@ -14,4 +14,5 @@ class JWorker(QRunnable):
 
     @Slot()
     def run(self):
+        # TODO execute Julia paint
         pass

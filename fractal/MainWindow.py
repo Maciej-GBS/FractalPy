@@ -1,6 +1,7 @@
 import numpy as np
 from PySide2 import QtCore, QtGui, QtWidgets
 from fractal.CustomGraphics import CustomGraphics
+from fractal.ArrayImage import ArrayImage
 from fractal.Julia import Julia
 from fractal.Polynomial import Polynomial
 
@@ -9,9 +10,13 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.j = Julia()
+        self.image = ArrayImage()
         self.layout_object = MainWindowLayout(self)
         self.layout_object.setupUi()
         self.setupSignals()
+
+    def setZoom(self, z: float):
+        self.layout_object.zoomSpin.setValue(z)
 
     def setupSignals(self):
         lo = self.layout_object
@@ -23,15 +28,7 @@ class MainWindow(QtWidgets.QMainWindow):
         lo.graphicsView.changeZoom.connect(self.changeZoom)
         lo.graphicsView.changeOffset.connect(self.changeOffset)
         self.j.progress.connect(self.updateProgress)
-
-    def status(self, text: str):
-        self.layout_object.statusbar.showMessage(text)
-
-    def updateImage(self):
-        self.updateJulia()
-        img = self.layout_object.graphicsView.getImage()
-        img = self.j.paint(img)
-        self.layout_object.graphicsView.setImage(img)
+        self.image.updated.connect(self.imageUpdated)
 
     def updateJulia(self):
         f = self.layout_object.fText.toPlainText()
@@ -43,13 +40,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.j.setDenominator(Polynomial(g))
         self.j.setC(complex(r * np.cos(fi), r * np.sin(fi)))
 
+    def status(self, text: str):
+        self.layout_object.statusbar.showMessage(text)
+
+    def updateImage(self):
+        self.updateJulia()
+        dim = self.layout_object.graphicsView.size().toTuple()
+        self.image.setData(self.j(*dim))
+
+    def imageUpdated(self, new_img):
+        self.layout_object.graphicsView.setImage(new_img)
+
     def changeOffset(self, x: float, y: float):
         off = self.j.offset - np.array([x, y])
         self.j.setOffset(*off)
         #self.updateImage()
-
-    def setZoom(self, z: float):
-        self.layout_object.zoomSpin.setValue(z)
 
     def changeZoom(self, dz: float):
         self.setZoom(self.layout_object.zoomSpin.value() * dz)

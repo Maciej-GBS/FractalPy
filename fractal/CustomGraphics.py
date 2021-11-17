@@ -13,7 +13,6 @@ class CustomGraphics(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.mousePos = None
-        self.image = None
         self.pix = None
         self.originalT = None
 
@@ -21,23 +20,7 @@ class CustomGraphics(QGraphicsView):
         # disable scrolling
         pass
 
-    def getImage(self):
-        """Gets the current image.
-        If the image does not match the view size a new blank image is returned.
-
-        Returns:
-            QtGui.QImage(view.width, view.height, RGB32)
-        """
-        w,h = self.size().toTuple()
-        iw,ih = (-1,-1) if self.image is None else self.image.size().toTuple()
-        if iw == w and ih == h:
-            return self.image
-        else:
-            self.image = QImage(w, h, QImage.Format_RGB32)
-            return self.image
-
     def setImage(self, img: QImage):
-        self.image = img
         scene = QGraphicsScene()
         self.pix = scene.addPixmap(QPixmap.fromImage(img))
         self.pix.setTransformationMode(Qt.FastTransformation)
@@ -82,6 +65,8 @@ class CustomGraphics(QGraphicsView):
         dzoom = 1.0 + degrees / 180.0
         self.changeZoom.emit(dzoom)
         if self.pix:
+            # NOTE there is some error in the calculations
+            # offsetting the result from the real center
             center = self.pix.boundingRect().center()
             t = self.pix.transform()
             c1 = t.map(center)
