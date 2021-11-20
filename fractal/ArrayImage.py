@@ -20,7 +20,7 @@ class ArrayImage(QObject):
         self.colormap = cmap
         self.updated.emit(self.toImage())
 
-    def toImage(self):
+    def toImage(self) -> QImage:
         w, h = self.data.shape
         image = QImage(w, h, QImage.Format_RGB32)
         # TODO improve - remove loops

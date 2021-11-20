@@ -1,5 +1,7 @@
 import numpy as np
 from PySide2 import QtCore, QtGui, QtWidgets
+from PySide2.QtWidgets import QDialog, QFileDialog, QMessageBox
+from PySide2.QtGui import QImage
 from fractal.CustomGraphics import CustomGraphics
 from fractal.ArrayImage import ArrayImage
 from fractal.Julia import Julia
@@ -34,7 +36,12 @@ class MainWindow(QtWidgets.QMainWindow):
         f = self.layout_object.fText.toPlainText()
         g = self.layout_object.gText.toPlainText()
         r = float(self.layout_object.rSpin.value())
-        fi = 2 * np.pi * self.layout_object.fiSlider.value() / self.layout_object.fiSlider.maximum()
+        fi = (
+            2
+            * np.pi
+            * self.layout_object.fiSlider.value()
+            / self.layout_object.fiSlider.maximum()
+        )
         self.j.max_iterations = self.layout_object.iterSpin.value()
         self.j.setNumerator(Polynomial(f))
         self.j.setDenominator(Polynomial(g))
@@ -54,7 +61,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def changeOffset(self, x: float, y: float):
         off = self.j.offset - np.array([x, y])
         self.j.setOffset(*off)
-        #self.updateImage()
+        # self.updateImage()
 
     def changeZoom(self, dz: float):
         self.setZoom(self.layout_object.zoomSpin.value() * dz)
@@ -73,11 +80,83 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def zoomChanged(self, d: float):
         self.j.setScale(d)
-        #self.updateImage()
+        # self.updateImage()
 
-    def exportImageAs(self):
-        # TODO open save as dialog and export image
-        raise NotImplementedError
+    def exportImageAs(
+        self,
+        quality: int = -1,
+    ):
+        if len(self.image.data.shape) < 2:
+            # Show error dialog - no image to be saved
+            self.showWarning(
+                "No Generated Image!",
+                'Click "Generate" to generate a new image, then export it with "Export as"',
+            )
+            return
+
+        # For up-to-date extensions with write support refer to:
+        # https://doc.qt.io/qtforpython-5/PySide2/QtGui/QImage.html#reading-and-writing-image-files
+        ALLOWED_EXTENSIONS = [
+            "jpg",
+            "jpeg",
+            "png",
+            "bmp",
+            "ppm",
+            "xbm",
+            "xpm",
+        ]
+        options = QFileDialog.Options()
+        # options |= QFileDialog.DontUseNativeDialog
+        filename, selected_filter = QFileDialog.getSaveFileName(
+            self,
+            "Save Generated Image",
+            "",
+            "Image Files (*.png *.jpg *.jpeg *.bmp)",
+            options=options,
+        )
+        if filename:
+            filename_parts = filename.split(".")
+            if len(filename_parts) >= 2:
+                extension = filename_parts[-1]
+                if extension in ALLOWED_EXTENSIONS:
+                    q_image: QImage = self.image.toImage()
+                    q_image.save(filename, extension, quality)
+                else:
+                    decision = self.showWarning(
+                        "Unsupported Extension",
+                        f"Allowed extensions: {ALLOWED_EXTENSIONS}",
+                        buttons=QMessageBox.Retry | QMessageBox.Cancel,
+                    )
+                    if decision == QMessageBox.Retry:
+                        self.exportImageAs(quality)
+                    else:
+                        return
+
+            else:
+                decision = self.showWarning(
+                    "No File Extension Provided",
+                    "Add an extension to the filename to save it.",
+                    buttons=QMessageBox.Retry | QMessageBox.Cancel,
+                )
+                if decision == QMessageBox.Retry:
+                    self.exportImageAs(quality)
+                else:
+                    return
+
+    def showWarning(
+        self,
+        title: str,
+        text: str = None,
+        buttons = QMessageBox.Ok,
+    ):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle(title)
+        if text:
+            dlg.setText(text)
+        dlg.setStandardButtons(buttons)
+        dlg.setIcon(QMessageBox.Warning)
+        return dlg.exec()
+
 
 class MainWindowLayout(object):
     def __init__(self, owner: MainWindow):
