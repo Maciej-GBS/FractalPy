@@ -4,6 +4,8 @@ from fractal.CustomGraphics import CustomGraphics
 from fractal.ArrayImage import ArrayImage
 from fractal.Julia import Julia
 from fractal.Polynomial import Polynomial
+from fractal.ColormapWidget import ColormapWidget
+
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -34,7 +36,12 @@ class MainWindow(QtWidgets.QMainWindow):
         f = self.layout_object.fText.toPlainText()
         g = self.layout_object.gText.toPlainText()
         r = float(self.layout_object.rSpin.value())
-        fi = 2 * np.pi * self.layout_object.fiSlider.value() / self.layout_object.fiSlider.maximum()
+        fi = (
+            2
+            * np.pi
+            * self.layout_object.fiSlider.value()
+            / self.layout_object.fiSlider.maximum()
+        )
         self.j.max_iterations = self.layout_object.iterSpin.value()
         self.j.setNumerator(Polynomial(f))
         self.j.setDenominator(Polynomial(g))
@@ -54,7 +61,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def changeOffset(self, x: float, y: float):
         off = self.j.offset - np.array([x, y])
         self.j.setOffset(*off)
-        #self.updateImage()
+        # self.updateImage()
 
     def changeZoom(self, dz: float):
         self.setZoom(self.layout_object.zoomSpin.value() * dz)
@@ -64,7 +71,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def editColormap(self):
         # TODO show ColormapWidget
-        raise NotImplementedError
+        dlg = QtWidgets.QDialog(self)
+        layout = QtWidgets.QVBoxLayout(dlg)
+        layout.addWidget(ColormapWidget(self.image.colormap))
+        dlg.setLayout(layout)
+        dlg.exec()
 
     def reset(self):
         self.setZoom(1.0)
@@ -73,11 +84,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def zoomChanged(self, d: float):
         self.j.setScale(d)
-        #self.updateImage()
+        # self.updateImage()
 
     def exportImageAs(self):
         # TODO open save as dialog and export image
         raise NotImplementedError
+
 
 class MainWindowLayout(object):
     def __init__(self, owner: MainWindow):
