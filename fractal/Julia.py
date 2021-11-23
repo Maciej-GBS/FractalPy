@@ -61,12 +61,13 @@ class Julia(QObject):
         # TODO progressive image generating
         data = np.zeros((w, h))
         self.progress.emit(0.0)
-        for y in range(0,h):
-            for x in range(0,w):
-                scaled_range = self.xyrange / self.scale
-                offset_pos = np.array([x, y]) + self.offset
-                z = ((offset_pos / np.array([w, h])) - 0.5) * scaled_range
-                data[x][y] = self._calc(complex(*z), self.C)
-            self.progress.emit(y / h)
+        scaled_range = self.xyrange / self.scale
+        size_array = np.array([w, h])
+        offset_poses = np.array([[[x + self.offset[0], y + self.offset[1]] for y in range(0, h)] for x in range(0, w)])
+        zs = ((offset_poses / size_array) - np.ones_like(offset_poses) * 0.5) * scaled_range
+        
+        vec_func = np.vectorize(self._calc)
+
+        data = vec_func(zs, self.C)
         self.progress.emit(1.0)
         return data

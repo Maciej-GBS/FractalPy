@@ -6,6 +6,7 @@ from fractal.Julia import Julia
 
 ThreadPool = QThreadPool()
 
+
 class JWorker(QRunnable):
     finished = Signal(QImage)
 
