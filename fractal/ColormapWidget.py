@@ -49,11 +49,11 @@ class ColormapWidget(QtWidgets.QWidget):
     def set_color_stop(self, stop_key: float):
         color = QtWidgets.QColorDialog.getColor()
         # print(int(color.name()[1:], 16))
-        self.colormap.cmap[stop_key] = np.array([color.r, color.g, color.b])
+        self.colormap.cmap[stop_key] = np.array([color.red(), color.green(), color.blue()])
         self._set_button_labels()
         self.img.change()
 
     def _set_button_labels(self):
-        self.startColorButton.setText(f"Color at value: {self.colormap_start()[0]}\n#{f'{self.colormap_start()[1]:06x}':^7}")
-        self.midColorButton.setText(f"Color at value: {self.colormap_mid()[0]}\n#{f'{self.colormap_mid()[1]:06x}':^7}")
-        self.stopColorButton.setText(f"Color at value: {self.colormap_stop()[0]}\n#{f'{self.colormap_stop()[1]:06x}':^7}")
+        self.startColorButton.setText(f"Color at value: {self.colormap_start()[0]}\n#{f'{self.colormap_start()[1]}'}")
+        self.midColorButton.setText(f"Color at value: {self.colormap_mid()[0]}\n#{f'{self.colormap_mid()[1]}'}")
+        self.stopColorButton.setText(f"Color at value: {self.colormap_stop()[0]}\n#{f'{self.colormap_stop()[1]}'}")
