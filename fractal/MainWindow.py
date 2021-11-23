@@ -8,7 +8,9 @@ from fractal.Julia import Julia
 from fractal.Polynomial import Polynomial
 from fractal.ColormapWidget import ColormapWidget
 from fractal.JWorker import JWorker
+import time
 
+TIME_TO_WAIT_AFTER_IMAGE_MOVE_BEFORE_UPDATE = 1.  # in seconds
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -18,7 +20,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.layout_object = MainWindowLayout(self)
         self.layout_object.setupUi()
         self.thread_pool = QtCore.QThreadPool()
-        print(f"Multithreading with maximum {self.thread_pool.maxThreadCount()} threads")
+        self.thread_in_progress = False
+        print(
+            f"Multithreading with maximum {self.thread_pool.maxThreadCount()} threads"
+        )
         self.setupSignals()
 
     def setZoom(self, z: float):
@@ -33,11 +38,7 @@ class MainWindow(QtWidgets.QMainWindow):
         lo.zoomSpin.valueChanged[float].connect(self.zoomChanged)
         lo.graphicsView.changeZoom.connect(self.changeZoom)
         lo.graphicsView.changeOffset.connect(self.changeOffset)
-        self.j.progress.connect(self.updateProgress)
         self.image.updated.connect(self.imageUpdated)
-        self.thread_pool.finished.connect(
-            lambda result, job_id: self.updateImage(result, job_id)
-        )  # Run new calculation as soon as the old one finishes
 
     def updateJulia(self):
         f = self.layout_object.fText.toPlainText()
@@ -57,18 +58,44 @@ class MainWindow(QtWidgets.QMainWindow):
     def status(self, text: str):
         self.layout_object.statusbar.showMessage(text)
 
+    def _set_thread_in_progress(self, is_thread_in_progress: bool):
+        """Set thread in progress status. Necessary for lambdas in worker.signals.xyz.connect()
+
+        Args:
+            is_thread_in_progress (bool): [description]
+        """
+        self.thread_in_progress = is_thread_in_progress
+
     def generateImage(self):
-        """Initial image generation"""
+        """Image generation using Julia class"""
+        if self.thread_in_progress:
+            return
+        self._set_thread_in_progress(True)
+
         self.updateJulia()
         dim = self.layout_object.graphicsView.size().toTuple()
-        
-        worker = JWorker(self.j.paint, *dim)
-        worker.signals.result.connect(lambda result: self.updateImage(result, 0))
 
-        self.thread_pool.start(worker) # * JWorker calls julia.paint() internally and emits the result on finished
+        worker = JWorker(self.j.paint, *dim)
+        worker.signals.progress.connect(self.updateProgress)
+        worker.signals.error.connect(print)
+        worker.signals.result.connect(
+            lambda result: self.updateImage(
+                calculated_img=result,
+                job_id=0,
+            ),
+        )
+        worker.signals.finished.connect(
+            lambda: self._set_thread_in_progress(
+                False,
+            ),
+        )
+
+        self.thread_pool.start(
+            worker
+        )  # * JWorker calls julia.paint() internally and emits the result on finished
 
     def updateImage(self, calculated_img, job_id: int):
-        print(f"Finished calculating job number {job_id=job_id}")
+        print(f"Finished calculating job number {job_id=}")
 
         # Set current view to the calculated image
         # TODO: check if job_id greater than previous job_id
@@ -80,7 +107,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def changeOffset(self, x: float, y: float):
         off = self.j.offset - np.array([x, y])
         self.j.setOffset(*off)
-        
+
+        time.sleep(TIME_TO_WAIT_AFTER_IMAGE_MOVE_BEFORE_UPDATE)
         self.generateImage()  # * JWorker calls julia.paint() internally and emits the result on finished
 
     def changeZoom(self, dz: float):
@@ -104,7 +132,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def zoomChanged(self, d: float):
         self.j.setScale(d)
-        
+
+        time.sleep(TIME_TO_WAIT_AFTER_IMAGE_MOVE_BEFORE_UPDATE)
         self.generateImage()  # * JWorker calls julia.paint() internally and emits the result on finished
 
     def exportImageAs(

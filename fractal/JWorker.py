@@ -25,7 +25,7 @@ class JWorker(QRunnable):
         self.signals = WorkerSignals()
 
         # Callback will allow access to current progress from outside of the worker
-        self.kwargs['progress-callback'] = self.signals.progress
+        self.kwargs['progress_callback'] = self.signals.progress
 
     @Slot()
     def run(self):
@@ -51,4 +51,4 @@ class WorkerSignals(QObject):
     finished = Signal()
     error = Signal(tuple)
     result = Signal(object)
-    progress = Signal(int)
+    progress = Signal(float)

@@ -2,6 +2,8 @@ import numpy as np
 from PySide2.QtCore import QObject, Signal
 from fractal.Polynomial import Polynomial
 
+from typing import Callable
+
 
 class Julia(QObject):
     progress = Signal(float)
@@ -48,11 +50,11 @@ class Julia(QObject):
             R = np.array((n.real, n.imag))
             R = R @ R
             lim = np.sqrt(self.xyrange @ self.xyrange)
-            if (R >= lim):
+            if R >= lim:
                 return self._getColor(i / self.max_iterations)
         return self._getColor(1.0)
 
-    def paint(self, w: int, h: int):
+    def paint(self, w: int, h: int, progress_callback: Callable = None):
         """Calculate the iterations to escape over max iterations
         and build an array of results:
 
@@ -61,12 +63,15 @@ class Julia(QObject):
         # TODO progressive image generating
         data = np.zeros((w, h))
         self.progress.emit(0.0)
-        for y in range(0,h):
-            for x in range(0,w):
+        progress_callback.emit(0.0)
+        for y in range(0, h):
+            for x in range(0, w):
                 scaled_range = self.xyrange / self.scale
                 offset_pos = np.array([x, y]) + self.offset
                 z = ((offset_pos / np.array([w, h])) - 0.5) * scaled_range
                 data[x][y] = self._calc(complex(*z), self.C)
             self.progress.emit(y / h)
+            progress_callback.emit(y / h)
         self.progress.emit(1.0)
+        progress_callback.emit(1.0)
         return data
