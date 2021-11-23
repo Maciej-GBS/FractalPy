@@ -21,12 +21,14 @@ class ArrayImage(QObject):
         self.updated.emit(self.toImage())
 
     def toImage(self) -> QImage:
-        w, h = self.data.shape
-        image = QImage(w, h, QImage.Format_RGB32)
+        vec_colormap = np.vectorize(self.colormap)
+        colors = vec_colormap(self.data)
+        im_np = np.transpose(colors, (1, 0, 2)).copy()
+        qimage = QImage(
+            im_np,
+            im_np.shape[1],
+            im_np.shape[0],
+            QImage.Format_RGB888,
+        )
         # TODO improve - remove loops
-        # see qtforpython-5 reading and writing image files
-        for x in range(0, w):
-            for y in range(0, h):
-                color = self.colormap(self.data[x][y])
-                image.setPixel(x, y, color)
-        return image
+        return qimage
