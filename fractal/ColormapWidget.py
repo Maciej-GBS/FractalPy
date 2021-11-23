@@ -1,3 +1,4 @@
+import numpy as np
 from PySide2 import QtWidgets
 from fractal import ArrayImage
 
@@ -48,7 +49,7 @@ class ColormapWidget(QtWidgets.QWidget):
     def set_color_stop(self, stop_key: float):
         color = QtWidgets.QColorDialog.getColor()
         # print(int(color.name()[1:], 16))
-        self.colormap.cmap[stop_key] = int(color.name()[1:], 16)
+        self.colormap.cmap[stop_key] = np.array([color.r, color.g, color.b])
         self._set_button_labels()
         self.img.change()
 
