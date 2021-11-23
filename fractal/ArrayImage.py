@@ -31,5 +31,5 @@ class ArrayImage(QObject):
         for x in range(0, w):
             for y in range(0, h):
                 color = self.colormap(self.data[x][y])
-                image.setPixel(x, y, color)
+                image.setPixelColor(x, y, color)
         return image

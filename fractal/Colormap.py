@@ -1,26 +1,24 @@
 import numpy as np
+from PySide2.QtGui import QColor
 
 
 class Colormap:
     def __init__(self):
         self.cmap = {
-            0.0: np.array([0, 0, 0]),
-            0.5: np.array([0, 255, 0]),
-            1.0: np.array([255, 255, 255]),
+            0.0: 0x000000,
+            0.5: 0x00ff00,
+            1.0: 0xffffff,
         }
 
-    def __call__(self, v: float):
+    def __call__(self, v: float) -> QColor:
         return self.apply(v)
 
-    def apply(self, v: float):
-        clr = np.zeros(3)
+    def apply(self, v: float) -> QColor:
         values = sorted(list(self.cmap.items()))
 
-        for i in range(0, 3):
-            clr[i] = np.interp(v, [x[0] for x in values], [y[1][i] for y in values])
+        clr = np.interp(v, [x[0] for x in values], [y[1] for y in values])
 
-        hexclr = clr * np.array([16**4, 16**2, 1])
-        return int(hexclr.sum())
+        return QColor.fromRgb(int(clr))
 
 
 def apply_colormap(func, cmap: Colormap):
