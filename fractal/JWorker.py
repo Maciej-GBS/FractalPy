@@ -9,18 +9,24 @@ from PySide2.QtGui import QImage
 from PySide2.QtCore import QRunnable, QThreadPool, Signal, Slot
 from fractal.Julia import Julia
 
+from typing import Callable
 
 ThreadPool = QThreadPool()
 
+
 class JWorker(QRunnable):
-    finished = Signal(QImage, int)
 
     def __init__(self):
         super().__init__()
+        self.job_id = 0
+        self.finished = Signal(QImage, int)
 
     @Slot()
-    def run(self):
-        # TODO execute Julia paint
-        job_id = 0
-        result = None
-        self.finished.emit(result, job_id)
+    def run(
+        self,
+        func: Callable,
+        *args,
+    ):
+        self.job_id += 1
+        result = func(*args)
+        self.finished.emit(result, self.job_id)

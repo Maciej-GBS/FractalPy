@@ -7,7 +7,7 @@ from fractal.ArrayImage import ArrayImage
 from fractal.Julia import Julia
 from fractal.Polynomial import Polynomial
 from fractal.ColormapWidget import ColormapWidget
-
+from fractal.JWorker import JWorker
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -17,6 +17,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.image = ArrayImage()
         self.layout_object = MainWindowLayout(self)
         self.layout_object.setupUi()
+        self.jworker = JWorker()
+        self.thread_pool = QtCore.QThreadPool()
+        self.thread_pool.setMaxThreadCount(2)
         self.setupSignals()
 
     def setZoom(self, z: float):
@@ -25,7 +28,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def setupSignals(self):
         lo = self.layout_object
         lo.savButton.clicked.connect(self.exportImageAs)
-        lo.genButton.clicked.connect(self.updateImage)
+        lo.genButton.clicked.connect(self.calculateImage)
         lo.colorButton.clicked.connect(self.editColormap)
         lo.resetButton.clicked.connect(self.reset)
         lo.zoomSpin.valueChanged[float].connect(self.zoomChanged)
@@ -33,6 +36,9 @@ class MainWindow(QtWidgets.QMainWindow):
         lo.graphicsView.changeOffset.connect(self.changeOffset)
         self.j.progress.connect(self.updateProgress)
         self.image.updated.connect(self.imageUpdated)
+        self.jworker.finished.connect(
+            lambda result, job_id: self.updateImage(result, job_id)
+        )  # Run new calculation as soon as the old one finishes
 
     def updateJulia(self):
         f = self.layout_object.fText.toPlainText()
@@ -52,10 +58,23 @@ class MainWindow(QtWidgets.QMainWindow):
     def status(self, text: str):
         self.layout_object.statusbar.showMessage(text)
 
-    def updateImage(self):
+    def calculateImage(self):
+        """Initial image generation"""
         self.updateJulia()
         dim = self.layout_object.graphicsView.size().toTuple()
-        self.image.setData(self.j(*dim))
+
+        self.jworker.run(
+            self.j.paint,
+            *dim,
+        )  # * JWorker calls julia.paint() internally and emits the result on finished
+
+    def updateImage(self, calculated_data, job_id: int):
+        print(f"Finished calculating job number {job_id=job_id}")
+        # Set current view to the calculated image
+        self.image.setData(calculated_data)
+        
+        # Immediately start a new calculation
+        self.calculateImage()
 
     def imageUpdated(self, new_img):
         self.layout_object.graphicsView.setImage(new_img)
@@ -153,7 +172,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self,
         title: str,
         text: str = None,
-        buttons = QMessageBox.Ok,
+        buttons=QMessageBox.Ok,
     ):
         dlg = QMessageBox(self)
         dlg.setWindowTitle(title)
