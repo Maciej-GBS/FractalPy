@@ -1,11 +1,12 @@
-from PySide2 import QtWidgets, QtGui
-from typing import Dict
+from PySide2 import QtWidgets
+from fractal import ArrayImage
 
 
 class ColormapWidget(QtWidgets.QWidget):
-    def __init__(self, colormap: Dict[float, int], parent=None):
+    def __init__(self, img: ArrayImage, parent=None):
         super().__init__(parent)
-        self.colormap = colormap
+        self.img = img
+        self.colormap = img.colormap
 
         # Return first key-val pair
         self.colormap_start = lambda: sorted(list(self.colormap.cmap.items()))[0]
@@ -46,9 +47,10 @@ class ColormapWidget(QtWidgets.QWidget):
 
     def set_color_stop(self, stop_key: float):
         color = QtWidgets.QColorDialog.getColor()
-        print(int(color.name()[1:], 16))
+        # print(int(color.name()[1:], 16))
         self.colormap.cmap[stop_key] = int(color.name()[1:], 16)
         self._set_button_labels()
+        self.img.change()
 
     def _set_button_labels(self):
         self.startColorButton.setText(f"Color at value: {self.colormap_start()[0]}\n#{f'{self.colormap_start()[1]:06x}':^7}")

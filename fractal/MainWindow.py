@@ -72,10 +72,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.layout_object.progressBar.setValue(int(p * 100))
 
     def editColormap(self):
-        # TODO show ColormapWidget
         dlg = QtWidgets.QDialog(self)
         layout = QtWidgets.QVBoxLayout(dlg)
-        layout.addWidget(ColormapWidget(self.image.colormap))
+        layout.addWidget(ColormapWidget(self.image))
         dlg.setLayout(layout)
         dlg.exec()
 

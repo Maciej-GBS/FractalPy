@@ -12,13 +12,16 @@ class ArrayImage(QObject):
         self.colormap = Colormap()
         self.data = np.array([])
 
+    def change(self):
+        self.updated.emit(self.toImage())
+
     def setData(self, d: np.array):
         self.data = d
-        self.updated.emit(self.toImage())
+        self.change()
 
     def setColormap(self, cmap: Colormap):
         self.colormap = cmap
-        self.updated.emit(self.toImage())
+        self.change()
 
     def toImage(self) -> QImage:
         w, h = self.data.shape
