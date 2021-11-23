@@ -6,6 +6,8 @@ from fractal.CustomGraphics import CustomGraphics
 from fractal.ArrayImage import ArrayImage
 from fractal.Julia import Julia
 from fractal.Polynomial import Polynomial
+from fractal.ColormapWidget import ColormapWidget
+
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -71,7 +73,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def editColormap(self):
         # TODO show ColormapWidget
-        raise NotImplementedError
+        dlg = QtWidgets.QDialog(self)
+        layout = QtWidgets.QVBoxLayout(dlg)
+        layout.addWidget(ColormapWidget(self.image.colormap))
+        dlg.setLayout(layout)
+        dlg.exec()
 
     def reset(self):
         self.setZoom(1.0)
@@ -156,6 +162,7 @@ class MainWindow(QtWidgets.QMainWindow):
         dlg.setStandardButtons(buttons)
         dlg.setIcon(QMessageBox.Warning)
         return dlg.exec()
+
 
 
 class MainWindowLayout(object):
