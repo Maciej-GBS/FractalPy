@@ -42,7 +42,7 @@ class Julia(QObject):
         return 0.0 if progress >= 1 else np.exp(-progress)
 
     def _memkey(self, k: complex):
-        return str(round(k.real, 12)) + str(round(k.imag, 12))
+        return str(round(k.real, 6)) + str(round(k.imag, 6))
 
     def _calc(self, start: complex):
         l1key = self._memkey(self.C)
@@ -87,5 +87,6 @@ class Julia(QObject):
                 data[x][y] = self._calc(complex(*z))
             self.progress.emit(y / h)
         self.progress.emit(1.0)
+        print(self._memory)
         print(f"hits={self._ctr_hit}\tmiss={self._ctr_miss}")
         return data
