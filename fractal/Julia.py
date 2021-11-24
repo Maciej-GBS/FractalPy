@@ -1,5 +1,6 @@
 import numpy as np
 from PySide2.QtCore import QObject, Signal
+from fractal.JTransform import JTransform
 from fractal.Polynomial import Polynomial
 
 from typing import Callable
@@ -33,11 +34,9 @@ class Julia(QObject):
     def setC(self, c: complex):
         self.C = c
 
-    def setScale(self, s: float):
-        self.scale = s
-
-    def setOffset(self, x: float, y: float):
-        self.offset = np.array([x, y])
+    def setTransform(self, t: JTransform):
+        self.scale = float(t.scale)
+        self.offset = np.copy(t.offset)
 
     def _getColor(self, progress: float):
         return 0.0 if progress >= 1 else np.exp(-progress)

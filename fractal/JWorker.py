@@ -4,16 +4,10 @@ each with different target image size.
 This allows to progressively improve the image
 quality at high performance.
 """
-import numpy as np
-from PySide2.QtGui import QImage
-from PySide2.QtCore import QRunnable, QThreadPool, Signal, Slot, QObject
-from fractal.Julia import Julia
+from PySide2.QtCore import QRunnable, Signal, Slot, QObject
 
-from typing import Callable
 import traceback
 import sys
-
-ThreadPool = QThreadPool()
 
 
 class JWorker(QRunnable):
