@@ -61,7 +61,6 @@ class MainWindow(QtWidgets.QMainWindow):
         j.setNumerator(Polynomial(f))
         j.setDenominator(Polynomial(g))
         j.setC(complex(r * np.cos(fi), r * np.sin(fi)))
-        j.setTransform(self.julia_transform)
         return j
 
     def status(self, text: str):
@@ -75,10 +74,14 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         self.thread_in_progress = is_thread_in_progress
 
-    def getWorker(self, size):
+    def getWorker(self, quality_factor: float):
+        dim = np.array(self.layout_object.graphicsView.size().toTuple()) * quality_factor
+        j = self.toJulia()
+        j.setTransform(self.julia_transform.resized(quality_factor))
         jcounter = int(self._job_counter) # necessary to pass the value not reference
-        worker = JWorker(self.toJulia().paint, int(size[0]), int(size[1]))
-        worker.signals.progress.connect(self.updateProgress)
+        worker = JWorker(j.paint, int(dim[0]), int(dim[1]))
+        if quality_factor == 1.0:
+            worker.signals.progress.connect(self.updateProgress)
         worker.signals.error.connect(print)
         worker.signals.result.connect(
             lambda result: self.updateImage(
@@ -100,12 +103,11 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         self._set_thread_in_progress(True)
 
-        dim = np.array(self.layout_object.graphicsView.size().toTuple())
-
         # * JWorker calls julia.paint() internally and emits the result on finished
         self.thread_pool.clear()
-        for i in np.geomspace(16, 1, self.JOB_THREADS):
-            self.thread_pool.start(self.getWorker(dim / i))
+        quality_queue = 1.0 / np.geomspace(16, 1, self.JOB_THREADS)
+        for q in quality_queue:
+            self.thread_pool.start(self.getWorker(q))
 
     def updateImage(self, calculated_img, job_id: int):
         print(f"Finished calculating job number {job_id=}")
