@@ -73,6 +73,10 @@ class MainWindow(QtWidgets.QMainWindow):
             is_thread_in_progress (bool): [description]
         """
         self.thread_in_progress = is_thread_in_progress
+        if is_thread_in_progress:
+            self.status(self.layout_object.MSG_WAIT)
+        else:
+            self.status(self.layout_object.MSG_CLICK_TO_START)
 
     def getWorker(self, quality_factor: float):
         dim = np.array(self.layout_object.graphicsView.size().toTuple()) * quality_factor
@@ -89,11 +93,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 job_id=jcounter,
             ),
         )
-        worker.signals.finished.connect(
-            lambda: self._set_thread_in_progress(
-                False,
-            ),
-        )
+        if quality_factor == 1.0:
+            worker.signals.finished.connect(
+                lambda: self._set_thread_in_progress(False),
+            )
         self._job_counter += 1
         return worker
 
@@ -222,6 +225,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 class MainWindowLayout(object):
+    MSG_CLICK_TO_START = "Click generate to start..."
+    MSG_WAIT = "Please wait..."
+
     def __init__(self, owner: MainWindow):
         super().__init__()
         self.owner = owner
@@ -249,7 +255,7 @@ class MainWindowLayout(object):
     def addStatusBar(self):
         self.statusbar = QtWidgets.QStatusBar(self.owner)
         self.statusbar.setObjectName("statusbar")
-        self.statusbar.showMessage("Click generate to start...")
+        self.statusbar.showMessage(self.MSG_CLICK_TO_START)
         self.owner.setStatusBar(self.statusbar)
 
     def addMenuBar(self):
