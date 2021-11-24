@@ -1,6 +1,6 @@
 import numpy as np
-from PySide2 import QtCore, QtGui, QtWidgets
-from PySide2.QtWidgets import QDialog, QFileDialog, QMessageBox
+from PySide2 import QtCore, QtWidgets
+from PySide2.QtWidgets import QFileDialog, QMessageBox
 from PySide2.QtGui import QImage
 from fractal.CustomGraphics import CustomGraphics
 from fractal.ArrayImage import ArrayImage
@@ -9,11 +9,11 @@ from fractal.Julia import Julia
 from fractal.Polynomial import Polynomial
 from fractal.ColormapWidget import ColormapWidget
 from fractal.JWorker import JWorker
-import time
 
-TIME_TO_WAIT_AFTER_IMAGE_MOVE_BEFORE_UPDATE = 1.  # in seconds
 
 class MainWindow(QtWidgets.QMainWindow):
+    JOB_THREADS = 4
+
     def __init__(self):
         super(MainWindow, self).__init__()
         self.julia_transform = JTransform()
@@ -24,10 +24,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.layout_object.setupUi()
         self.thread_pool = QtCore.QThreadPool()
         self.thread_in_progress = False
-        print(
-            f"Multithreading with maximum {self.thread_pool.maxThreadCount()} threads"
-        )
         self.setupSignals()
+        maxThreads = self.thread_pool.maxThreadCount()
+        print(
+            f"Multithreading with maximum {maxThreads} threads"
+        )
+        if self.JOB_THREADS > maxThreads:
+            self.JOB_THREADS = maxThreads
 
     def setZoom(self, z: float):
         self.layout_object.zoomSpin.setValue(z)
@@ -72,16 +75,9 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         self.thread_in_progress = is_thread_in_progress
 
-    def generateImage(self):
-        """Image generation using Julia class"""
-        if self.thread_in_progress:
-            return
-        self._set_thread_in_progress(True)
-
-        dim = self.layout_object.graphicsView.size().toTuple()
-
+    def getWorker(self, size):
         jcounter = int(self._job_counter) # necessary to pass the value not reference
-        worker = JWorker(self.toJulia().paint, *dim)
+        worker = JWorker(self.toJulia().paint, int(size[0]), int(size[1]))
         worker.signals.progress.connect(self.updateProgress)
         worker.signals.error.connect(print)
         worker.signals.result.connect(
@@ -95,11 +91,21 @@ class MainWindow(QtWidgets.QMainWindow):
                 False,
             ),
         )
-
         self._job_counter += 1
-        self.thread_pool.start(
-            worker
-        )  # * JWorker calls julia.paint() internally and emits the result on finished
+        return worker
+
+    def generateImage(self):
+        """Image generation using Julia class"""
+        if self.thread_in_progress:
+            return
+        self._set_thread_in_progress(True)
+
+        dim = np.array(self.layout_object.graphicsView.size().toTuple())
+
+        # * JWorker calls julia.paint() internally and emits the result on finished
+        self.thread_pool.clear()
+        for i in np.linspace(1, 16, self.JOB_THREADS):
+            self.thread_pool.start(self.getWorker(dim / i))
 
     def updateImage(self, calculated_img, job_id: int):
         print(f"Finished calculating job number {job_id=}")
@@ -115,9 +121,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def changeOffset(self, x: float, y: float):
         self.julia_transform.changeOffset(x, y)
-
-        time.sleep(TIME_TO_WAIT_AFTER_IMAGE_MOVE_BEFORE_UPDATE)
-        self.generateImage()  # * JWorker calls julia.paint() internally and emits the result on finished
 
     def changeZoom(self, dz: float):
         self.setZoom(self.layout_object.zoomSpin.value() * dz)
@@ -140,9 +143,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def zoomChanged(self, d: float):
         self.julia_transform.setScale(d)
-
-        time.sleep(TIME_TO_WAIT_AFTER_IMAGE_MOVE_BEFORE_UPDATE)
-        self.generateImage()  # * JWorker calls julia.paint() internally and emits the result on finished
 
     def exportImageAs(
         self,
