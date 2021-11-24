@@ -42,7 +42,6 @@ class Julia(QObject):
         return 0.0 if progress >= 1 else np.exp(-progress)
 
     def _calc(self, start: complex, c: complex):
-        # TODO dynamic memory
         n = start
         for i in range(0, self.max_iterations):
             n = self.numerator(n) / self.denominator(n) + c
@@ -59,7 +58,6 @@ class Julia(QObject):
 
         J(width, height) = np.array((width, height))
         """
-        # TODO progressive image generating
         data = np.zeros((w, h))
         self.progress.emit(0.0)
         progress_callback.emit(0.0)
