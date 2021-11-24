@@ -1,23 +1,36 @@
 import numpy as np
-from PySide2 import QtCore, QtGui, QtWidgets
-from PySide2.QtWidgets import QDialog, QFileDialog, QMessageBox
+from PySide2 import QtCore, QtWidgets
+from PySide2.QtWidgets import QFileDialog, QMessageBox
 from PySide2.QtGui import QImage
 from fractal.CustomGraphics import CustomGraphics
 from fractal.ArrayImage import ArrayImage
+from fractal.JTransform import JTransform
 from fractal.Julia import Julia
 from fractal.Polynomial import Polynomial
 from fractal.ColormapWidget import ColormapWidget
-
+from fractal.JWorker import JWorker
 
 
 class MainWindow(QtWidgets.QMainWindow):
+    JOB_THREADS = 5
+
     def __init__(self):
         super(MainWindow, self).__init__()
-        self.j = Julia()
+        self.julia_transform = JTransform()
         self.image = ArrayImage()
+        self._job_counter = 0
+        self._image_counter = -1
         self.layout_object = MainWindowLayout(self)
         self.layout_object.setupUi()
+        self.thread_pool = QtCore.QThreadPool()
+        self.thread_in_progress = False
         self.setupSignals()
+        maxThreads = self.thread_pool.maxThreadCount()
+        print(
+            f"Multithreading with maximum {maxThreads} threads"
+        )
+        if self.JOB_THREADS > maxThreads:
+            self.JOB_THREADS = maxThreads
 
     def setZoom(self, z: float):
         self.layout_object.zoomSpin.setValue(z)
@@ -25,16 +38,16 @@ class MainWindow(QtWidgets.QMainWindow):
     def setupSignals(self):
         lo = self.layout_object
         lo.savButton.clicked.connect(self.exportImageAs)
-        lo.genButton.clicked.connect(self.updateImage)
+        lo.genButton.clicked.connect(self.generateImage)
         lo.colorButton.clicked.connect(self.editColormap)
         lo.resetButton.clicked.connect(self.reset)
         lo.zoomSpin.valueChanged[float].connect(self.zoomChanged)
         lo.graphicsView.changeZoom.connect(self.changeZoom)
         lo.graphicsView.changeOffset.connect(self.changeOffset)
-        self.j.progress.connect(self.updateProgress)
         self.image.updated.connect(self.imageUpdated)
 
-    def updateJulia(self):
+    def toJulia(self):
+        j = Julia()
         f = self.layout_object.fText.toPlainText()
         g = self.layout_object.gText.toPlainText()
         r = float(self.layout_object.rSpin.value())
@@ -44,26 +57,70 @@ class MainWindow(QtWidgets.QMainWindow):
             * self.layout_object.fiSlider.value()
             / self.layout_object.fiSlider.maximum()
         )
-        self.j.max_iterations = self.layout_object.iterSpin.value()
-        self.j.setNumerator(Polynomial(f))
-        self.j.setDenominator(Polynomial(g))
-        self.j.setC(complex(r * np.cos(fi), r * np.sin(fi)))
+        j.max_iterations = self.layout_object.iterSpin.value()
+        j.setNumerator(Polynomial(f))
+        j.setDenominator(Polynomial(g))
+        j.setC(complex(r * np.cos(fi), r * np.sin(fi)))
+        j.setTransform(self.julia_transform)
+        return j
 
     def status(self, text: str):
         self.layout_object.statusbar.showMessage(text)
 
-    def updateImage(self):
-        self.updateJulia()
-        dim = self.layout_object.graphicsView.size().toTuple()
-        self.image.setData(self.j(*dim))
+    def _set_thread_in_progress(self, is_thread_in_progress: bool):
+        """Set thread in progress status. Necessary for lambdas in worker.signals.xyz.connect()
+
+        Args:
+            is_thread_in_progress (bool): [description]
+        """
+        self.thread_in_progress = is_thread_in_progress
+
+    def getWorker(self, size):
+        jcounter = int(self._job_counter) # necessary to pass the value not reference
+        worker = JWorker(self.toJulia().paint, int(size[0]), int(size[1]))
+        worker.signals.progress.connect(self.updateProgress)
+        worker.signals.error.connect(print)
+        worker.signals.result.connect(
+            lambda result: self.updateImage(
+                calculated_img=result,
+                job_id=jcounter,
+            ),
+        )
+        worker.signals.finished.connect(
+            lambda: self._set_thread_in_progress(
+                False,
+            ),
+        )
+        self._job_counter += 1
+        return worker
+
+    def generateImage(self):
+        """Image generation using Julia class"""
+        if self.thread_in_progress:
+            return
+        self._set_thread_in_progress(True)
+
+        dim = np.array(self.layout_object.graphicsView.size().toTuple())
+
+        # * JWorker calls julia.paint() internally and emits the result on finished
+        self.thread_pool.clear()
+        for i in np.geomspace(16, 1, self.JOB_THREADS):
+            self.thread_pool.start(self.getWorker(dim / i))
+
+    def updateImage(self, calculated_img, job_id: int):
+        print(f"Finished calculating job number {job_id=}")
+
+        if job_id > self._image_counter:
+            self._image_counter = job_id
+
+            # Set current view to the calculated image
+            self.image.setData(calculated_img)
 
     def imageUpdated(self, new_img):
         self.layout_object.graphicsView.setImage(new_img)
 
     def changeOffset(self, x: float, y: float):
-        off = self.j.offset - np.array([x, y])
-        self.j.setOffset(*off)
-        # self.updateImage()
+        self.julia_transform.changeOffset(x, y)
 
     def changeZoom(self, dz: float):
         self.setZoom(self.layout_object.zoomSpin.value() * dz)
@@ -80,12 +137,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def reset(self):
         self.setZoom(1.0)
-        self.j.setOffset(0.0, 0.0)
+        self.julia_transform.setOffset(0.0, 0.0)
         self.layout_object.graphicsView.resetPreview()
 
     def zoomChanged(self, d: float):
-        self.j.setScale(d)
-        # self.updateImage()
+        self.julia_transform.setScale(d)
 
     def exportImageAs(
         self,
@@ -152,7 +208,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self,
         title: str,
         text: str = None,
-        buttons = QMessageBox.Ok,
+        buttons=QMessageBox.Ok,
     ):
         dlg = QMessageBox(self)
         dlg.setWindowTitle(title)
@@ -161,7 +217,6 @@ class MainWindow(QtWidgets.QMainWindow):
         dlg.setStandardButtons(buttons)
         dlg.setIcon(QMessageBox.Warning)
         return dlg.exec()
-
 
 
 class MainWindowLayout(object):
