@@ -12,7 +12,7 @@ from fractal.JWorker import JWorker
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    JOB_THREADS = 4
+    JOB_THREADS = 5
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -104,7 +104,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # * JWorker calls julia.paint() internally and emits the result on finished
         self.thread_pool.clear()
-        for i in np.linspace(16, 1, self.JOB_THREADS):
+        for i in np.geomspace(16, 1, self.JOB_THREADS):
             self.thread_pool.start(self.getWorker(dim / i))
 
     def updateImage(self, calculated_img, job_id: int):
