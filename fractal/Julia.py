@@ -42,12 +42,19 @@ class Julia(QObject):
         return 0.0 if progress >= 1 else np.exp(-progress)
 
     def _calc(self, start: complex, c: complex):
+        lim = np.sqrt(self.xyrange @ self.xyrange)
+        min_delta = 0.1 * lim / self.max_iterations
+        Rp = 0.0
+        dR = 2 * min_delta
         n = start
         for i in range(0, self.max_iterations):
             n = self.numerator(n) / self.denominator(n) + c
             R = np.array((n.real, n.imag))
             R = R @ R
-            lim = np.sqrt(self.xyrange @ self.xyrange)
+            dR = 0.2 * dR + 0.8 * abs(R - Rp)
+            if dR < min_delta:
+                break
+            Rp = R
             if R >= lim:
                 return self._getColor(i / self.max_iterations)
         return self._getColor(1.0)
@@ -59,13 +66,14 @@ class Julia(QObject):
         J(width, height) = np.array((width, height))
         """
         data = np.zeros((w, h))
+        scaled_range = self.xyrange / self.scale
+        size_array = np.array([w, h])
         self.progress.emit(0.0)
         progress_callback.emit(0.0)
         for y in range(0, h):
             for x in range(0, w):
-                scaled_range = self.xyrange / self.scale
                 offset_pos = np.array([x, y]) + self.offset
-                z = ((offset_pos / np.array([w, h])) - 0.5) * scaled_range
+                z = ((offset_pos / size_array) - 0.5) * scaled_range
                 data[x][y] = self._calc(complex(*z), self.C)
             self.progress.emit(y / h)
             progress_callback.emit(y / h)
