@@ -4,6 +4,7 @@ from fractal.JTransform import JTransform
 from fractal.Polynomial import Polynomial
 
 from typing import Callable
+import time
 
 
 class Julia(QObject):
@@ -51,7 +52,7 @@ class Julia(QObject):
             n = self.numerator(n) / self.denominator(n) + c
             R = np.array((n.real, n.imag))
             R = R @ R
-            dR = 0.2 * dR + 0.8 * abs(R - Rp)
+            dR = 0.5 * dR + 0.5 * abs(R - Rp)
             if dR < min_delta:
                 break
             Rp = R
@@ -65,6 +66,7 @@ class Julia(QObject):
 
         J(width, height) = np.array((width, height))
         """
+        _timer_start = time.time()
         data = np.zeros((w, h))
         scaled_range = self.xyrange / self.scale
         size_array = np.array([w, h])
@@ -79,4 +81,7 @@ class Julia(QObject):
             progress_callback.emit(y / h)
         self.progress.emit(1.0)
         progress_callback.emit(1.0)
+        _timer_end = time.time()
+        _delta_t = _timer_end - _timer_start
+        print(f"{size_array} => {_delta_t}")
         return data
