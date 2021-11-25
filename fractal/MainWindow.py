@@ -12,7 +12,7 @@ from fractal.JWorker import JWorker
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    JOB_THREADS = 5
+    JOB_THREADS = 3
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -37,7 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setupSignals(self):
         lo = self.layout_object
-        lo.savButton.clicked.connect(self.exportImageAs)
+        lo.savButton.clicked.connect(lambda: self.exportImageAs(100))
         lo.genButton.clicked.connect(self.generateImage)
         lo.colorButton.clicked.connect(self.editColormap)
         lo.resetButton.clicked.connect(self.reset)
@@ -84,8 +84,6 @@ class MainWindow(QtWidgets.QMainWindow):
         j.setTransform(self.julia_transform.resized(quality_factor))
         jcounter = int(self._job_counter) # necessary to pass the value not reference
         worker = JWorker(j.paint, int(dim[0]), int(dim[1]))
-        if quality_factor == 1.0:
-            worker.signals.progress.connect(self.updateProgress)
         worker.signals.error.connect(print)
         worker.signals.result.connect(
             lambda result: self.updateImage(
@@ -94,6 +92,7 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
         )
         if quality_factor == 1.0:
+            worker.signals.progress.connect(self.updateProgress)
             worker.signals.finished.connect(
                 lambda: self._set_thread_in_progress(False),
             )
